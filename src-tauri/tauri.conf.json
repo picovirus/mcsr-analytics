@@ -1,0 +1,59 @@
+{
+  "productName": "MCSR Analytics",
+  "version": "0.1.0",
+  "identifier": "me.picovi.mcsr-analytics",
+  "build": {
+    "beforeDevCommand": "pnpm ui:dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "pnpm ui:build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "MCSR Analytics",
+        "width": 1000,
+        "height": 750
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ]
+  },
+  "plugins": {
+    "updater": {
+      "active": true,
+      "endpoints": [
+        "https://github.com/picovirus/mcsr-analytics/releases/download/updater/stable.json"
+      ],
+      "dialog": false,
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDgxRENFMjRFMzg2MTdGNDkKUldSSmYyRTRUdUxjZ1Y4ZkNRMkdVczVHWmJpVGZpVUM2akdzSXJHZnBpajA3RzZ3dmRkMllESmsK",
+      "windows": {
+        "installMode": "passive"
+      }
+    },
+    "cli": {
+      "description": "MCSR Analytics",
+      "longDescription": "Simple tool to visualize minecraft speedrunning records statistics",
+      "args": [
+        {
+          "name": "records",
+          "short": "r",
+          "takesValue": true
+        }
+      ],
+      "subcommands": {}
+    }
+  }
+}
