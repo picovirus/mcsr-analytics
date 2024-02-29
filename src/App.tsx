@@ -4,7 +4,7 @@ import {info} from "@tauri-apps/plugin-log";
 import {getVersion} from "@tauri-apps/api/app";
 import {check} from "@tauri-apps/plugin-updater";
 import {relaunch} from "@tauri-apps/plugin-process";
-import {Typography, Table, Button, Divider, Tooltip, Tag, Space} from 'antd'
+import {ConfigProvider, Typography, Table, Button, Divider, Tooltip, Tag, Space, notification} from 'antd'
 import {InfoCircleFilled, SyncOutlined} from '@ant-design/icons';
 import {ColumnsType} from "antd/es/table";
 import {Modal} from 'antd';
@@ -35,8 +35,20 @@ function timeRender(time: number) {
 }
 
 function App() {
+    const [updateCheck, setUpdateCheck] = useState(false)
+    const [notif, notifContextHolder] = notification.useNotification();
+
     useEffect(() => {
         (async () => {
+            console.log(updateCheck)
+            if (updateCheck) {
+                notif.info({
+                    message: "Checking for new updates",
+                    description: "Please wait for me fetch updates from github...",
+                    placement: "bottomLeft",
+                });
+            }
+
             try {
                 await info("Checking for an update...");
                 const update = await check();
@@ -44,10 +56,10 @@ function App() {
                 if (update?.available) {
                     await info("Updates available!");
                     confirm({
-                        title: 'There\'s a new update available!',
+                        title: 'An update available!',
                         icon: <InfoCircleFilled/>,
                         content: '💠 Bug fixes and minor improvements.',
-                        okText: 'install',
+                        okText: 'Install',
                         async onOk() {
                             try {
                                 return await new Promise(async () => {
@@ -66,19 +78,31 @@ function App() {
                     });
 
                     return;
+                } else {
+                    await info("No updates available!");
+                    if (updateCheck) {
+                        notif.success({
+                            message: "You are already up to date",
+                            placement: "bottomLeft",
+                        });
+                        setUpdateCheck(false)
+                    }
                 }
-                await info("No updates available!");
             } catch (e) {
                 await info(String(e))
+
+                if (updateCheck) {
+                    notif.error({
+                        message: "Update check failed!",
+                        description: String(e),
+                        btn: <Button onClick={() => setUpdateCheck(true)}>Retry</Button>,
+                        placement: "bottomLeft",
+                    });
+                    setUpdateCheck(false)
+                }
             }
         })()
-    }, [])
-
-    useEffect(() => {
-        (async () => {
-            setVersion(await getVersion())
-        })()
-    }, [])
+    }, [updateCheck])
 
     const [version, setVersion] = useState('0.0.0')
     const [records, setRecords] = useState([])
@@ -261,26 +285,32 @@ function App() {
 
     useEffect(() => {
         (async () => {
-            await updateRecords()
+            setVersion(await getVersion())
         })()
     }, [])
 
     const {Title} = Typography;
     return (
-        <Typography>
-            <Title style={{textAlign: "center"}}>MCSR Analytics! <Tag color={"green"} bordered={true}>
-                v{version}
-            </Tag></Title>
-            <Divider orientation={"left"} style={{fontSize: 21}}></Divider>
-            <div style={{display: "flex", marginBottom: 10}}>
-                <Button style={{marginLeft: "auto"}} type={"primary"} icon={<SyncOutlined/>} onClick={updateRecords}
-                        loading={loadingRecords}>
-                    Update
-                </Button>
-            </div>
-            <Table columns={columns} dataSource={records} loading={loadingRecords} sticky size={"middle"} bordered
-                   scroll={{x: 1500}}/>
-        </Typography>
+        <ConfigProvider>
+            {notifContextHolder}
+            <Typography>
+                <Title style={{textAlign: "center"}}>MCSR Analytics!
+                    <a title={"click to check updates"} onClick={() => setUpdateCheck(true)}>
+                        <Tag color={"green"} bordered={true} className={"ml-1.5"}>v{version}</Tag>
+                    </a>
+                </Title>
+                <Divider orientation={"left"} style={{fontSize: 21}}></Divider>
+                <div style={{display: "flex", marginBottom: 10}}>
+                    <Button style={{marginLeft: "auto"}} type={"primary"} icon={<SyncOutlined/>} onClick={updateRecords}
+                            loading={loadingRecords}>
+                        Update
+                    </Button>
+                </div>
+                <Table columns={columns} dataSource={records} loading={loadingRecords} sticky size={"middle"} bordered
+                       scroll={{x: 1500}}/>
+            </Typography>
+        </ConfigProvider>
+
     )
 }
 
