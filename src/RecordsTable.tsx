@@ -1,9 +1,9 @@
 import {useCallback, useEffect, useState} from "react";
 import {ColumnsType} from "antd/es/table";
-import {Button, Space, Table, Tag, Tooltip, Typography, Radio, RadioChangeEvent} from "antd";
+import {Button, Space, Table, Tag, Tooltip, Typography, Radio, RadioChangeEvent, FloatButton} from "antd";
 import moment from "moment/moment";
 import {invoke} from "@tauri-apps/api/core";
-import {SyncOutlined} from "@ant-design/icons";
+import {ArrowUpOutlined, SyncOutlined} from "@ant-design/icons";
 import {NotificationInstance} from "antd/lib/notification/interface";
 
 function timeRender(time: number) {
@@ -244,8 +244,9 @@ function RecordsTable({notif}: Props) {
                 </Button>
             </div>
             <Table columns={columns} dataSource={records} loading={loadingRecords} sticky={{offsetScroll: -3}}
-                   size={"middle"} bordered scroll={{x: 1500}} pagination={{size: "default"}}
+                   size={"middle"} bordered scroll={{x: 1500}} pagination={{size: "default", position: ["bottomCenter"]}}
             />
+            <FloatButton.BackTop visibilityHeight={750} icon={<ArrowUpOutlined />} />
         </>
     )
 }

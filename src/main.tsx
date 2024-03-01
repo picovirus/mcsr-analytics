@@ -8,3 +8,20 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
         <App/>
     </React.StrictMode>,
 );
+
+document.addEventListener('contextmenu', event => event.preventDefault());
+document.addEventListener("keydown", (ev) => {
+    // Disabling keyboard shortcuts
+    ev.preventDefault();
+
+    if (ev.ctrlKey && !ev.shiftKey && !ev.altKey) {
+        switch (ev.code) {
+            case "KeyR":
+                location.reload();
+                break;
+
+            default:
+                break;
+        }
+    }
+});
