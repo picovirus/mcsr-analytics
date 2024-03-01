@@ -18,6 +18,9 @@
     "log:allow-log",
     "log:default",
     "updater:allow-check",
-    "updater:default"
+    "updater:default",
+    "store:allow-get",
+    "store:allow-set",
+    "store:allow-save"
   ]
 }

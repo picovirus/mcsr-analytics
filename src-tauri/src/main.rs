@@ -14,11 +14,12 @@ fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_log::Builder::new().targets([
             Target::new(TargetKind::Stdout),
-            Target::new(TargetKind::LogDir { file_name: None }),
+            Target::new(TargetKind::LogDir { file_name: Some("{configDir}".to_string()) }),
         ]).with_colors(ColoredLevelConfig::default()).build())
         .plugin(tauri_plugin_cli::init())
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
+        .plugin(tauri_plugin_store::Builder::default().build())
         .plugin(tauri_plugin_process::init())
         .setup(|app| {
             // Default to GUI if the app was opened with no CLI args.

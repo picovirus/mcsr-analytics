@@ -4,6 +4,7 @@ import {getVersion} from "@tauri-apps/api/app";
 import {check} from "@tauri-apps/plugin-updater";
 import {Window} from '@tauri-apps/api/window';
 import {exit, relaunch} from "@tauri-apps/plugin-process";
+import {Store} from "@tauri-apps/plugin-store";
 import {
     notification,
     ConfigProvider,
@@ -96,6 +97,21 @@ function App() {
         })()
     }, [])
 
+    const [darkTheme, setDarkTheme] = useState(false)
+    const store = new Store("settings.dat");
+    useEffect(() => {
+        (async () => {
+            setDarkTheme(await store.get("theme") ?? darkTheme)
+        })()
+    }, [])
+
+    useEffect(() => {
+        (async () => {
+            await store.set("theme", darkTheme)
+            await store.save()
+        })()
+    }, [darkTheme])
+
     const items: MenuProps['items'] = [
         {
             key: '1',
@@ -124,7 +140,6 @@ function App() {
         },
     ];
 
-    const [darkTheme, setDarkTheme] = useState(false)
     return (
         <ConfigProvider theme={{
             token: {
