@@ -1,23 +1,14 @@
 #![cfg_attr(all(not(debug_assertions), target_os = "windows"), windows_subsystem = "windows")]
 
 mod speedrunigt;
+mod commands;
 
 use log::{error};
 use tauri::AppHandle;
 use tauri_plugin_log::{Target, TargetKind};
 use tauri_plugin_log::fern::colors::ColoredLevelConfig;
 use tauri_plugin_cli::CliExt;
-use crate::speedrunigt::*;
-
-#[tauri::command]
-fn greet(name: &str) -> String {
-    format!("Hello, {}! You've been greeted from Rust!", name)
-}
-
-#[tauri::command(async)]
-fn update_records() -> Vec<Record> {
-    return get_records();
-}
+use crate::commands::*;
 
 fn main() {
     tauri::Builder::default()
@@ -64,7 +55,7 @@ fn main() {
 
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![greet, update_records])
+        .invoke_handler(tauri::generate_handler![update_records])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

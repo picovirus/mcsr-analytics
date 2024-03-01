@@ -10,9 +10,10 @@ import RecordsTable from "./RecordsTable.tsx";
 function App() {
     const [updateCheck, setUpdateCheck] = useState(false)
     const [notif, notifContextHolder] = notification.useNotification();
+
+    // fixme use effect executes two times! before and after setUpdateCheck(true) and setUpdateCheck(false)
     useEffect(() => {
         (async () => {
-            console.log(updateCheck)
             if (updateCheck) {
                 notif.info({
                     message: "Checking for new updates",
@@ -37,7 +38,6 @@ function App() {
                                 return await new Promise(async () => {
                                     await info("Downloading updates...");
                                     await update.downloadAndInstall();
-                                    await update.downloadAndInstall()
                                     await info("Completed, relaunching...");
                                     await relaunch();
                                 });
@@ -84,24 +84,24 @@ function App() {
     }, [])
 
     const [darkTheme, setDarkTheme] = useState(false)
-
     return (
         <ConfigProvider theme={{
             token: {
-                colorBgBase: darkTheme ? "#1a1a1a" : "#ffffff"
+                colorBgBase: darkTheme ? "#0a0a0c" : "#ffffff",
+                colorBgContainer: darkTheme ? "#0e0e11" : "#ffffff"
             },
             algorithm: darkTheme ? theme.darkAlgorithm : theme.defaultAlgorithm
         }}>
             {notifContextHolder}
             <Layout className={"p-4 pt-10"} style={{minHeight: "100vh"}}>
-                <Typography.Title style={{textAlign: "center"}}>
-                    <a onClick={() => setDarkTheme(!darkTheme)}> MCSR Analytics! </a>
+                <Typography.Title className={"text-center"}>
+                    <a onClick={() => setDarkTheme(!darkTheme)} > MCSR Analytics! </a>
                     <a title={"click to check updates"} onClick={() => setUpdateCheck(true)}>
                         <Tag color={"green"} bordered={true} className={"ml-1"}>v{version}</Tag>
                     </a>
                 </Typography.Title>
                 <Divider orientation={"left"} style={{fontSize: 21}}></Divider>
-                <RecordsTable/>
+                <RecordsTable notif={notif} />
             </Layout>
         </ConfigProvider>
     )

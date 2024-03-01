@@ -4,6 +4,7 @@ import {Button, Space, Table, Tag, Tooltip, Typography, Radio, RadioChangeEvent}
 import moment from "moment/moment";
 import {invoke} from "@tauri-apps/api/core";
 import {SyncOutlined} from "@ant-design/icons";
+import {NotificationInstance} from "antd/lib/notification/interface";
 
 function timeRender(time: number) {
     const {Text} = Typography;
@@ -27,14 +28,26 @@ function timeRender(time: number) {
     )
 }
 
-function RecordsTable() {
+export interface Props {
+    notif: NotificationInstance;
+}
+
+function RecordsTable({notif}: Props) {
     const [records, setRecords] = useState([])
     const [period, setPeriod] = useState('today')
     const [loadingRecords, setLoadingRecords] = useState(false)
 
     const updateRecords = useCallback(async () => {
         setLoadingRecords(true)
-        setRecords(await invoke("update_records"));
+        try {
+            setRecords(await invoke("update_records", {period: period}));
+        } catch (err: any) {
+            notif.error({
+                message: "Failed to index records",
+                description: JSON.parse(err).description,
+                placement: "bottomLeft",
+            });
+        }
         setLoadingRecords(false)
     }, [records, period])
 
@@ -45,7 +58,7 @@ function RecordsTable() {
 
     const splitFilters = [
         {
-            text: 'exclude empty',
+            text: 'Exclude empty',
             value: 'exclude-0',
         },
     ]
@@ -231,8 +244,7 @@ function RecordsTable() {
                 </Button>
             </div>
             <Table columns={columns} dataSource={records} loading={loadingRecords} sticky={{offsetScroll: -3}}
-                   size={"middle"} bordered
-                   scroll={{x: 1500}}
+                   size={"middle"} bordered scroll={{x: 1500}} pagination={{size: "default"}}
             />
         </>
     )

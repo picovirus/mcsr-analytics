@@ -24,6 +24,7 @@ tauri-plugin-shell = "2.0.0-beta"
 tauri-plugin-updater = "2.0.0-beta"
 tauri-plugin-process = "2.0.0-beta"
 windows-sys = "0.52.0"
+thiserror = "1.0.57"
 
 [features]
 # this feature is used for production builds or when `devPath` points to the filesystem

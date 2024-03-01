@@ -1,17 +1,19 @@
-use std::collections::HashMap;
 use std::fs::File;
 use std::io::BufReader;
 use std::path::PathBuf;
+use std::time::{Duration, SystemTime};
 use dirs::home_dir;
 use glob::glob;
 use serde::{Deserialize, Serialize};
+use crate::commands::Error;
 
 #[derive(Serialize, Deserialize)]
 pub struct Record {
     #[serde(default)]
     key: i32,
+    #[serde(default)]
+    file: String,
     mc_version: String,
-    speedrunigt_version: String,
     category: String,
     run_type: String,
     is_completed: bool,
@@ -20,15 +22,11 @@ pub struct Record {
     world_name: String,
     #[serde(default)]
     is_cheat_allowed: bool,
-    #[serde(default)]
-    default_gamemode: i8,
     date: i64,
     retimed_igt: i32,
     final_igt: i32,
-    stats_igt: i32,
     final_rta: i32,
     timelines: Vec<Timeline>,
-    advancements: HashMap<String, Advancement>,
 
     #[serde(default)]
     enter_nether: i32,
@@ -51,66 +49,77 @@ struct Timeline {
     rta: i32,
 }
 
-#[derive(Serialize, Deserialize)]
-struct Advancement {
-    complete: bool,
-    is_advancement: bool,
-    criteria: HashMap<String, Timer>,
-    igt: i32,
-    rta: i32,
-}
+fn get_record_files(period: String) -> Result<Vec<PathBuf>, Error> {
+    let mut records_folder: PathBuf;
 
-#[derive(Serialize, Deserialize)]
-struct Timer {
-    igt: i32,
-    rta: i32,
-}
-
-
-fn get_record_files() -> Vec<PathBuf> {
-    let mut record_files = Vec::new();
-    let home_dir = home_dir();
-    match home_dir {
-        Some(mut records_path) => {
-            records_path.push("speedrunigt/records/*.json");
-            let record_path_str = records_path.as_os_str().to_str().unwrap();
-            let records_path = glob(record_path_str);
-            match records_path {
-                Ok(records_path) => {
-                    for record_file in records_path {
-                        match record_file {
-                            Ok(record_file) => {
-                                record_files.push(record_file)
-                            }
-                            _ => {}
-                        }
-                    }
-                }
-                _ => {} // pattern error
-            }
+    match home_dir() {
+        Some(home_path) => {
+            records_folder = home_path;
+            records_folder.push("speedrunigt/records/");
         }
-        None => {}
+        None => {
+            return Err(Error::Other("Home dir not found!".to_string()));
+        }
     }
-    return record_files;
+
+    let mut record_files: Vec<PathBuf> = Vec::new();
+    records_folder.push("*.json");
+    let file_paths = glob(records_folder.as_os_str().to_str().ok_or("err")?);
+    for record_file in file_paths? {
+        match record_file {
+            Ok(record_file) => {
+                let duration: Duration;
+                let record_date = record_file.metadata()?.modified()?;
+                match period.as_str() {
+                    "today" => duration = Duration::from_secs(60 * 60 * 24),
+                    "week" => duration = Duration::from_secs(60 * 60 * 24 * 7),
+                    "month" => duration = Duration::from_secs(60 * 60 * 24 * 30),
+                    "all" => {
+                        record_files.push(record_file);
+                        continue;
+                    }
+                    "yesterday" => {
+                        if record_date > (SystemTime::now() - Duration::from_secs(60 * 60 * 24 * 2)) &&
+                            record_date < (SystemTime::now() - Duration::from_secs(60 * 60 * 24))
+                        {
+                            record_files.push(record_file);
+                        }
+                        continue;
+                    }
+                    _ => { duration = Default::default() }
+                }
+
+                if record_date > SystemTime::now() - duration {
+                    record_files.push(record_file);
+                }
+            }
+            _ => {}
+        }
+    }
+
+    return Ok(record_files);
 }
 
-pub fn get_records() -> Vec<Record> {
-    let mut records = Vec::new();
-    let record_files = crate::speedrunigt::get_record_files();
+pub fn get_records(period: String) -> Result<Vec<Record>, Error> {
     let mut count = 1;
+    let mut records = Vec::new();
+    let record_files = get_record_files(period)?;
     for record_file in record_files {
-        // println!("test {}", record_file.clone().into_os_string().into_string().unwrap());
-        let reader = BufReader::new(File::open(record_file).unwrap());
-        let mut r: crate::speedrunigt::Record = match serde_json::from_reader(reader) {
+        let file_name = record_file.display().to_string();
+        let reader = BufReader::new(File::open(record_file)?);
+        let mut r: Record = match serde_json::from_reader(reader) {
             Ok(r) => r,
-            Err(_) => continue
+            Err(_) => continue // todo log me
         };
 
+        // todo load this value from settings
         if r.final_igt < 30000 { // if its below 30s its an skip
             continue;
         }
 
-        for timeline in &r.timelines{
+        r.key = count;
+        r.file = file_name;
+        for timeline in &r.timelines {
             match &*timeline.name {
                 "enter_nether" => {
                     r.enter_nether = timeline.igt
@@ -134,10 +143,9 @@ pub fn get_records() -> Vec<Record> {
             }
         }
 
-        r.key = count;
         records.push(r);
-
         count += 1;
     }
-    return records;
+
+    return Ok(records);
 }
