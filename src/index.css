@@ -24,3 +24,11 @@ body::-webkit-scrollbar {
     border-radius: 9999px;
     background-color: #6b6b6b;
 }
+
+.main-side-bar {
+    user-select: none;
+    -moz-user-select: none;
+    -khtml-user-select: none;
+    -webkit-user-select: none;
+    -o-user-select: none;
+}

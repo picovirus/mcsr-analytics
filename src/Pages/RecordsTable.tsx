@@ -1,10 +1,11 @@
 import {useCallback, useEffect, useState} from "react";
-import {ColumnsType} from "antd/es/table";
+import {ColumnsType} from "antd/lib/table";
 import {Button, Space, Table, Tag, Tooltip, Typography, Radio, RadioChangeEvent, FloatButton} from "antd";
 import moment from "moment/moment";
 import {invoke} from "@tauri-apps/api/core";
 import {ArrowUpOutlined, SyncOutlined} from "@ant-design/icons";
-import {NotificationInstance} from "antd/lib/notification/interface";
+import {useRouteContext} from "@tanstack/react-router";
+import {PageContext} from "./router.ts";
 
 function timeRender(time: number) {
     const {Text} = Typography;
@@ -28,11 +29,8 @@ function timeRender(time: number) {
     )
 }
 
-export interface Props {
-    notif: NotificationInstance;
-}
-
-function RecordsTable({notif}: Props) {
+function RecordsTable() {
+    const [notif] = useRouteContext({from: '/', select: (context: PageContext) => context.notification})
     const [records, setRecords] = useState([])
     const [period, setPeriod] = useState('today')
     const [loadingRecords, setLoadingRecords] = useState(false)
@@ -244,9 +242,10 @@ function RecordsTable({notif}: Props) {
                 </Button>
             </div>
             <Table columns={columns} dataSource={records} loading={loadingRecords} sticky={{offsetScroll: -3}}
-                   size={"middle"} bordered scroll={{x: 1500}} pagination={{size: "default", position: ["bottomCenter"]}}
+                   size={"middle"} bordered scroll={{x: 1500}}
+                   pagination={{size: "default", position: ["bottomCenter"]}}
             />
-            <FloatButton.BackTop visibilityHeight={750} icon={<ArrowUpOutlined />} />
+            <FloatButton.BackTop visibilityHeight={750} icon={<ArrowUpOutlined/>}/>
         </>
     )
 }
