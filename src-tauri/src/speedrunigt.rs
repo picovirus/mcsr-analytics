@@ -100,52 +100,69 @@ fn get_record_files(period: String) -> Result<Vec<PathBuf>, Error> {
     return Ok(record_files);
 }
 
-pub fn get_records(period: String) -> Result<Vec<Record>, Error> {
+pub async fn get_records(period: String) -> Result<Vec<Record>, Error> {
     let mut count = 1;
     let mut records = Vec::new();
     let record_files = get_record_files(period)?;
+
+    let mut tasks = Vec::with_capacity(record_files.len());
     for record_file in record_files {
-        let file_name = record_file.display().to_string();
-        let reader = BufReader::new(File::open(record_file)?);
-        let mut r: Record = match serde_json::from_reader(reader) {
-            Ok(r) => r,
-            Err(_) => continue // todo log me
-        };
-
-        // todo load this value from settings
-        if r.final_igt < 30000 { // if its below 30s its an skip
-            continue;
-        }
-
-        r.key = count;
-        r.file = file_name;
-        for timeline in &r.timelines {
-            match &*timeline.name {
-                "enter_nether" => {
-                    r.enter_nether = timeline.igt
-                }
-                "enter_bastion" => {
-                    r.enter_bastion = timeline.igt
-                }
-                "enter_fortress" => {
-                    r.enter_fortress = timeline.igt
-                }
-                "nether_travel" => {
-                    r.nether_travel = timeline.igt
-                }
-                "enter_stronghold" => {
-                    r.enter_stronghold = timeline.igt
-                }
-                "enter_end" => {
-                    r.enter_end = timeline.igt
-                }
-                _ => {}
-            }
-        }
-
-        records.push(r);
+        tasks.push(tokio::spawn(process_record(count, record_file)));
         count += 1;
     }
 
+    for task in tasks {
+        let result = task.await.unwrap();
+        match result {
+            Ok(result) => {
+                records.push(result);
+                count += 1;
+            }
+            _ => {}
+        }
+    }
+
     return Ok(records);
+}
+
+pub async fn process_record(key: i32, record_file: PathBuf) -> Result<Record, Error> {
+    let file_name = record_file.display().to_string();
+    let reader = BufReader::new(File::open(record_file)?);
+    let mut r: Record = match serde_json::from_reader(reader) {
+        Ok(r) => r,
+        _ => return Err(Error::Other("Can't open record file".to_string())) // TODO: log notice
+    };
+
+    // TODO: load this value from settings
+    if r.final_igt < 30000 { // if its below 30s it's a skip
+        Error::Other("Run is below 30 seconds".to_string());
+    }
+
+    r.key = key;
+    r.file = file_name;
+    for timeline in &r.timelines {
+        match &*timeline.name {
+            "enter_nether" => {
+                r.enter_nether = timeline.igt
+            }
+            "enter_bastion" => {
+                r.enter_bastion = timeline.igt
+            }
+            "enter_fortress" => {
+                r.enter_fortress = timeline.igt
+            }
+            "nether_travel" => {
+                r.nether_travel = timeline.igt
+            }
+            "enter_stronghold" => {
+                r.enter_stronghold = timeline.igt
+            }
+            "enter_end" => {
+                r.enter_end = timeline.igt
+            }
+            _ => {}
+        }
+    }
+
+    Ok(r)
 }

@@ -47,6 +47,6 @@ impl serde::Serialize for Error {
 }
 
 #[tauri::command(async)]
-pub fn update_records(period: String) -> Result<Vec<Record>, Error> {
-    return get_records(period);
+pub async fn update_records(period: String) -> Result<Vec<Record>, Error> {
+    return get_records(period).await;
 }
