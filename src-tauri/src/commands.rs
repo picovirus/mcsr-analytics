@@ -1,5 +1,5 @@
-use glob::PatternError;
 use crate::speedrunigt::{get_records, Record};
+use glob::PatternError;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
@@ -34,8 +34,8 @@ impl From<PatternError> for Error {
 
 impl serde::Serialize for Error {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-        where
-            S: serde::ser::Serializer,
+    where
+        S: serde::ser::Serializer,
     {
         use serde::ser::SerializeStruct;
 
@@ -48,5 +48,5 @@ impl serde::Serialize for Error {
 
 #[tauri::command(async)]
 pub async fn update_records(period: String) -> Result<Vec<Record>, Error> {
-    return get_records(period).await;
+    get_records(period).await
 }

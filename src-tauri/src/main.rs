@@ -1,14 +1,17 @@
-#![cfg_attr(all(not(debug_assertions), target_os = "windows"), windows_subsystem = "windows")]
+#![cfg_attr(
+    all(not(debug_assertions), target_os = "windows"),
+    windows_subsystem = "windows"
+)]
 
-mod speedrunigt;
 mod commands;
+mod speedrunigt;
 
-use log::{error};
-use tauri::AppHandle;
-use tauri_plugin_log::{Target, TargetKind};
-use tauri_plugin_log::fern::colors::ColoredLevelConfig;
-use tauri_plugin_cli::CliExt;
 use crate::commands::*;
+use log::error;
+use tauri::AppHandle;
+use tauri_plugin_cli::CliExt;
+use tauri_plugin_log::fern::colors::ColoredLevelConfig;
+use tauri_plugin_log::{Target, TargetKind};
 
 fn main() {
     tauri::Builder::default()

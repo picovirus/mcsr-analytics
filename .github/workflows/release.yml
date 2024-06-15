@@ -9,7 +9,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [ windows-latest ]
+        platform: [windows-latest]
 
     runs-on: ${{ matrix.platform }}
     steps:
@@ -46,6 +46,6 @@ jobs:
         with:
           tagName: v__VERSION__
           releaseName: __VERSION__
-          releaseBody: 'Bug fixes, and minor improvements. Checkout below assets to download this version:'
+          releaseBody: "Bug fixes, and minor improvements. Checkout below assets to download this version:"
           releaseDraft: true
           prerelease: false
